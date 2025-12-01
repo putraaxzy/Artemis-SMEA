@@ -85,7 +85,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'login' => 'required|string',
+            'username' => 'required|string',
             'password' => 'required|string'
         ]);
 
@@ -96,19 +96,15 @@ class AuthController extends Controller
             ], 400);
         }
 
-        // Try to login with username or telepon
-        $loginField = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 
-                     (is_numeric($request->login) ? 'telepon' : 'username');
-        
         $credentials = [
-            $loginField => $request->login,
+            'username' => $request->username,
             'password' => $request->password
         ];
 
         if (!$token = JWTAuth::attempt($credentials)) {
             return response()->json([
                 'berhasil' => false,
-                'pesan' => 'Username/telepon atau password salah'
+                'pesan' => 'Username atau password salah'
             ], 401);
         }
 
