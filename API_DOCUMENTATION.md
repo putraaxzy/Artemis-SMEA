@@ -88,15 +88,33 @@ POST /api/auth/login
 
 ```json
 {
-    "login": "johndoe",
+    "username": "johndoe",
     "password": "password12345"
 }
 ```
 
-**Note:** Field `login` bisa diisi dengan:
+**Response:**
 
--   Username (contoh: `johndoe`)
--   Nomor telepon (contoh: `081234567890`)
+```json
+{
+    "berhasil": true,
+    "data": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+        "pengguna": {
+            "id": 1,
+            "username": "johndoe",
+            "name": "John Doe",
+            "telepon": "081234567890",
+            "role": "siswa",
+            "kelas": "XII",
+            "jurusan": "RPL",
+            "dibuat_pada": "2025-12-01T10:00:00.000000Z",
+            "diperbarui_pada": "2025-12-01T10:00:00.000000Z"
+        }
+    },
+    "pesan": "Login berhasil"
+}
+```
 
 ### 4. Logout
 
@@ -498,9 +516,7 @@ Authorization: Bearer {token}
 
 ## 📝 Notes
 
-1. **Login Flexibility**: User dapat login menggunakan `username` atau `telepon`
-    - Jika input berisi angka saja → akan dicoba sebagai `telepon`
-    - Jika input berisi huruf/campuran → akan dicoba sebagai `username`
+1. **Login**: User hanya bisa login menggunakan `username`
 2. **Username Requirements**:
 
     - Hanya boleh huruf (a-z, A-Z), angka (0-9), dan underscore (\_)
