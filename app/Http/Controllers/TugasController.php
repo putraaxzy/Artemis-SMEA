@@ -28,6 +28,7 @@ class TugasController extends Controller
             'judul' => 'required|string|max:255',
             'target' => 'required|in:siswa,kelas',
             'id_target' => 'required|array|min:1',
+            'tipe_pengumpulan' => 'required|in:link,langsung',
         ]);
 
         if ($validator->fails()) {
@@ -83,6 +84,7 @@ class TugasController extends Controller
             'judul' => $request->judul,
             'target' => $request->target,
             'id_target' => $request->id_target,
+            'tipe_pengumpulan' => $request->tipe_pengumpulan,
         ]);
 
         // buat tugas untuk setiap siswa
@@ -102,6 +104,7 @@ class TugasController extends Controller
                 'judul' => $tugas->judul,
                 'target' => $tugas->target,
                 'id_target' => $tugas->id_target,
+                'tipe_pengumpulan' => $tugas->tipe_pengumpulan,
                 'total_siswa' => count($siswaIds),
                 'dibuat_pada' => $tugas->created_at->toISOString(),
                 'diperbarui_pada' => $tugas->updated_at->toISOString()
@@ -140,6 +143,7 @@ class TugasController extends Controller
                     'id' => $t->id,
                     'judul' => $t->judul,
                     'target' => $t->target,
+                    'tipe_pengumpulan' => $t->tipe_pengumpulan,
                     'dibuat_pada' => $t->created_at->toISOString(),
                 ];
 
@@ -173,19 +177,10 @@ class TugasController extends Controller
             ], 403);
         }
 
-        $validator = Validator::make($request->all(), [
-            'link_drive' => 'required|url'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'berhasil' => false,
-                'pesan' => $validator->errors()->first()
-            ], 400);
-        }
-
+        // Ambil penugasan dan tugas untuk cek tipe_pengumpulan
         $penugasan = Penugasaan::where('id_tugas', $id)
             ->where('id_siswa', $user->id)
+            ->with('tugas:id,tipe_pengumpulan')
             ->first();
 
         if (!$penugasan) {
@@ -202,11 +197,33 @@ class TugasController extends Controller
             ], 400);
         }
 
-        $penugasan->update([
-            'status' => 'dikirim',
-            'link_drive' => $request->link_drive,
-            'tanggal_pengumpulan' => now()
-        ]);
+        // Validasi berbeda berdasarkan tipe pengumpulan
+        $tipePengumpulan = $penugasan->tugas->tipe_pengumpulan;
+        
+        if ($tipePengumpulan === 'link') {
+            $validator = Validator::make($request->all(), [
+                'link_drive' => 'required|url'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'berhasil' => false,
+                    'pesan' => $validator->errors()->first()
+                ], 400);
+            }
+
+            $penugasan->update([
+                'status' => 'dikirim',
+                'link_drive' => $request->link_drive,
+                'tanggal_pengumpulan' => now()
+            ]);
+        } else {
+            // Tipe langsung: tidak perlu link_drive, langsung update status
+            $penugasan->update([
+                'status' => 'dikirim',
+                'tanggal_pengumpulan' => now()
+            ]);
+        }
 
         return response()->json([
             'berhasil' => true,
@@ -308,6 +325,7 @@ class TugasController extends Controller
                 'judul' => $tugas->judul,
                 'target' => $tugas->target,
                 'id_target' => $tugas->id_target,
+                'tipe_pengumpulan' => $tugas->tipe_pengumpulan,
                 'dibuat_pada' => $tugas->created_at->toISOString(),
                 'statistik' => [
                     'total_siswa' => $tugas->penugasan->count(),

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('judul');
             $table->enum('target', ['siswa', 'kelas']);
             $table->json('id_target');
+            $table->enum('tipe_pengumpulan', ['link', 'langsung'])->default('link');
             $table->timestamps();
 
             $table->foreign('id_guru')->references('id')->on('users')->onDelete('cascade');

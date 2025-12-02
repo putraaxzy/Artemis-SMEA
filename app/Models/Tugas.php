@@ -16,6 +16,7 @@ class Tugas extends Model
         'judul',
         'target',
         'id_target',
+        'tipe_pengumpulan',
     ];
 
     protected $casts = [

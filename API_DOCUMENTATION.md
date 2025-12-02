@@ -134,7 +134,8 @@ Authorization: Bearer {token}
 {
     "judul": "Tugas Matematika Bab 1",
     "target": "siswa",
-    "id_target": [1, 2, 3, 4]
+    "id_target": [1, 2, 3, 4],
+    "tipe_pengumpulan": "link"
 }
 ```
 
@@ -147,9 +148,16 @@ Authorization: Bearer {token}
     "id_target": [
         { "kelas": "XII", "jurusan": "RPL" },
         { "kelas": "XII", "jurusan": "MPLB" }
-    ]
+    ],
+    "tipe_pengumpulan": "langsung"
 }
 ```
+
+**Validasi:**
+
+-   **tipe_pengumpulan**: Required, harus `link` atau `langsung`
+    -   `link` = Siswa submit via link Google Drive/online
+    -   `langsung` = Siswa kumpulkan langsung ke guru (offline)
 
 **Response:**
 
@@ -162,6 +170,7 @@ Authorization: Bearer {token}
     "judul": "Tugas Matematika Bab 1",
     "target": "kelas",
     "id_target": [...],
+    "tipe_pengumpulan": "link",
     "total_siswa": 25,
     "dibuat_pada": "2025-12-01T10:00:00.000000Z",
     "diperbarui_pada": "2025-12-01T10:00:00.000000Z"
@@ -187,6 +196,7 @@ Authorization: Bearer {token}
             "id": 1,
             "judul": "Tugas Matematika Bab 1",
             "target": "kelas",
+            "tipe_pengumpulan": "link",
             "total_siswa": 25,
             "pending": 10,
             "dikirim": 12,
@@ -208,6 +218,7 @@ Authorization: Bearer {token}
             "id": 1,
             "judul": "Tugas Matematika Bab 1",
             "target": "kelas",
+            "tipe_pengumpulan": "link",
             "guru": "Pak Budi",
             "status": "pending",
             "dibuat_pada": "2025-12-01T10:00:00.000000Z"
@@ -234,6 +245,7 @@ Authorization: Bearer {token}
     "judul": "Tugas Matematika Bab 1",
     "target": "kelas",
     "id_target": [...],
+    "tipe_pengumpulan": "link",
     "dibuat_pada": "2025-12-01T10:00:00.000000Z",
     "statistik": {
       "total_siswa": 25,
@@ -272,13 +284,23 @@ POST /api/tugas/{id}/submit
 Authorization: Bearer {token}
 ```
 
-**Body:**
+**Body (untuk tipe_pengumpulan = "link"):**
 
 ```json
 {
     "link_drive": "https://drive.google.com/file/d/xxxxx"
 }
 ```
+
+**Body (untuk tipe_pengumpulan = "langsung"):**
+
+```json
+{}
+```
+
+**Note:**
+- Jika tugas dengan `tipe_pengumpulan` = `link`, field `link_drive` **wajib** diisi dengan URL valid
+- Jika tugas dengan `tipe_pengumpulan` = `langsung`, tidak perlu body atau bisa kosong (siswa konfirmasi sudah kumpul langsung ke guru)
 
 **Response:**
 
@@ -459,6 +481,11 @@ Authorization: Bearer {token}
 -   `PM`
 -   `TKJ`
 -   `AKL`
+
+### Tipe Pengumpulan
+
+-   `link` - Siswa submit via link Google Drive/online
+-   `langsung` - Siswa kumpulkan langsung ke guru (offline)
 
 ### Status Penugasan
 
