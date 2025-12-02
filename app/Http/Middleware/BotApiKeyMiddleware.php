@@ -15,20 +15,20 @@ class BotApiKeyMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $apiKey = $request->header('X-Bot-API-Key');
-        $expectedKey = env('BOT_API_KEY');
+        $botPassword = $request->header('X-Bot-Password');
+        $expectedPassword = env('BOT_PASSWORD');
 
-        if (!$apiKey) {
+        if (!$botPassword) {
             return response()->json([
                 'berhasil' => false,
-                'pesan' => 'API Key diperlukan'
+                'pesan' => 'Password diperlukan'
             ], 401);
         }
 
-        if ($apiKey !== $expectedKey) {
+        if ($botPassword !== $expectedPassword) {
             return response()->json([
                 'berhasil' => false,
-                'pesan' => 'API Key tidak valid'
+                'pesan' => 'Password tidak valid'
             ], 403);
         }
 
