@@ -35,9 +35,8 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'telepon' => 'required|string|max:20|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:guru,siswa',
-            'kelas' => 'required_if:role,siswa|nullable|in:X,XI,XII',
-            'jurusan' => 'required_if:role,siswa|nullable|in:MPLB,RPL,PM,TKJ,AKL'
+            'kelas' => 'required|in:X,XI,XII',
+            'jurusan' => 'required|in:MPLB,RPL,PM,TKJ,AKL'
         ]);
 
         if ($validator->fails()) {
@@ -52,7 +51,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'telepon' => $request->telepon,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role' => 'siswa',
             'kelas' => $request->kelas,
             'jurusan' => $request->jurusan,
         ]);

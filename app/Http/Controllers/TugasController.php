@@ -29,6 +29,7 @@ class TugasController extends Controller
             'target' => 'required|in:siswa,kelas',
             'id_target' => 'required|array|min:1',
             'tipe_pengumpulan' => 'required|in:link,langsung',
+            'tampilkan_nilai' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -85,6 +86,7 @@ class TugasController extends Controller
             'target' => $request->target,
             'id_target' => $request->id_target,
             'tipe_pengumpulan' => $request->tipe_pengumpulan,
+            'tampilkan_nilai' => $request->tampilkan_nilai ?? false,
         ]);
 
         // buat tugas untuk setiap siswa
@@ -105,6 +107,7 @@ class TugasController extends Controller
                 'target' => $tugas->target,
                 'id_target' => $tugas->id_target,
                 'tipe_pengumpulan' => $tugas->tipe_pengumpulan,
+                'tampilkan_nilai' => $tugas->tampilkan_nilai,
                 'total_siswa' => count($siswaIds),
                 'dibuat_pada' => $tugas->created_at->toISOString(),
                 'diperbarui_pada' => $tugas->updated_at->toISOString()
@@ -144,6 +147,7 @@ class TugasController extends Controller
                     'judul' => $t->judul,
                     'target' => $t->target,
                     'tipe_pengumpulan' => $t->tipe_pengumpulan,
+                    'tampilkan_nilai' => $t->tampilkan_nilai,
                     'dibuat_pada' => $t->created_at->toISOString(),
                 ];
 
@@ -153,8 +157,15 @@ class TugasController extends Controller
                     $data['dikirim'] = $t->penugasan->where('status', 'dikirim')->count();
                     $data['selesai'] = $t->penugasan->where('status', 'selesai')->count();
                 } else {
+                    $penugasan = $t->penugasan->first();
                     $data['guru'] = $t->guru->name;
-                    $data['status'] = $t->penugasan->first()->status ?? 'pending';
+                    $data['status'] = $penugasan->status ?? 'pending';
+                    
+                    // Siswa hanya bisa lihat nilai jika guru aktifkan fitur tampilkan_nilai
+                    if ($t->tampilkan_nilai && $penugasan) {
+                        $data['nilai'] = $penugasan->nilai;
+                        $data['catatan_guru'] = $penugasan->catatan_guru;
+                    }
                 }
 
                 return $data;
@@ -326,6 +337,7 @@ class TugasController extends Controller
                 'target' => $tugas->target,
                 'id_target' => $tugas->id_target,
                 'tipe_pengumpulan' => $tugas->tipe_pengumpulan,
+                'tampilkan_nilai' => $tugas->tampilkan_nilai,
                 'dibuat_pada' => $tugas->created_at->toISOString(),
                 'statistik' => [
                     'total_siswa' => $tugas->penugasan->count(),
@@ -334,8 +346,8 @@ class TugasController extends Controller
                     'selesai' => $tugas->penugasan->where('status', 'selesai')->count(),
                     'ditolak' => $tugas->penugasan->where('status', 'ditolak')->count(),
                 ],
-                'penugasan' => $tugas->penugasan->map(function($p) {
-                    return [
+                'penugasan' => $tugas->penugasan->map(function($p) use ($tugas) {
+                    $data = [
                         'id' => $p->id,
                         'siswa' => [
                             'id' => $p->siswa->id,
@@ -351,6 +363,14 @@ class TugasController extends Controller
                         'dibuat_pada' => $p->created_at->toISOString(),
                         'diperbarui_pada' => $p->updated_at->toISOString(),
                     ];
+                    
+                    // Hanya tampilkan nilai jika guru mengaktifkan fitur tampilkan_nilai
+                    if ($tugas->tampilkan_nilai) {
+                        $data['nilai'] = $p->nilai;
+                        $data['catatan_guru'] = $p->catatan_guru;
+                    }
+                    
+                    return $data;
                 })
             ],
             'pesan' => 'Detail tugas berhasil diambil'
@@ -372,7 +392,9 @@ class TugasController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:selesai,ditolak'
+            'status' => 'required|in:selesai,ditolak',
+            'nilai' => 'nullable|integer|min:0|max:100',
+            'catatan_guru' => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
@@ -393,7 +415,9 @@ class TugasController extends Controller
         }
 
         $penugasan->update([
-            'status' => $request->status
+            'status' => $request->status,
+            'nilai' => $request->nilai,
+            'catatan_guru' => $request->catatan_guru,
         ]);
 
         return response()->json([
@@ -401,6 +425,8 @@ class TugasController extends Controller
             'data' => [
                 'id' => $penugasan->id,
                 'status' => $penugasan->status,
+                'nilai' => $penugasan->nilai,
+                'catatan_guru' => $penugasan->catatan_guru,
                 'diperbarui_pada' => $penugasan->updated_at->toISOString()
             ],
             'pesan' => 'Status penugasan berhasil diubah'

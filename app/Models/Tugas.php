@@ -17,10 +17,12 @@ class Tugas extends Model
         'target',
         'id_target',
         'tipe_pengumpulan',
+        'tampilkan_nilai',
     ];
 
     protected $casts = [
         'id_target' => 'array',
+        'tampilkan_nilai' => 'boolean',
     ];
 
     /**

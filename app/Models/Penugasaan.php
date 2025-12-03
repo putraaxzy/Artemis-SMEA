@@ -17,6 +17,8 @@ class Penugasaan extends Model
         'status',
         'link_drive',
         'tanggal_pengumpulan',
+        'nilai',
+        'catatan_guru',
     ];
 
     protected $casts = [

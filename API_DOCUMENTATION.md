@@ -153,7 +153,8 @@ Authorization: Bearer {token}
     "judul": "Tugas Matematika Bab 1",
     "target": "siswa",
     "id_target": [1, 2, 3, 4],
-    "tipe_pengumpulan": "link"
+    "tipe_pengumpulan": "link",
+    "tampilkan_nilai": true
 }
 ```
 
@@ -167,7 +168,8 @@ Authorization: Bearer {token}
         { "kelas": "XII", "jurusan": "RPL" },
         { "kelas": "XII", "jurusan": "MPLB" }
     ],
-    "tipe_pengumpulan": "langsung"
+    "tipe_pengumpulan": "langsung",
+    "tampilkan_nilai": false
 }
 ```
 
@@ -176,6 +178,9 @@ Authorization: Bearer {token}
 -   **tipe_pengumpulan**: Required, harus `link` atau `langsung`
     -   `link` = Siswa submit via link Google Drive/online
     -   `langsung` = Siswa kumpulkan langsung ke guru (offline)
+-   **tampilkan_nilai**: Boolean (default: false)
+    -   `true` = Nilai akan ditampilkan ke siswa
+    -   `false` = Hanya status selesai yang ditampilkan, nilai disembunyikan
 
 **Response:**
 
@@ -189,6 +194,7 @@ Authorization: Bearer {token}
     "target": "kelas",
     "id_target": [...],
     "tipe_pengumpulan": "link",
+    "tampilkan_nilai": true,
     "total_siswa": 25,
     "dibuat_pada": "2025-12-01T10:00:00.000000Z",
     "diperbarui_pada": "2025-12-01T10:00:00.000000Z"
@@ -381,11 +387,36 @@ Authorization: Bearer {token}
 
 ```json
 {
-    "status": "selesai"
+    "status": "selesai",
+    "nilai": 85,
+    "catatan_guru": "Bagus, pertahankan!"
 }
 ```
 
-**Available Status:** `selesai`, `ditolak`
+**Validasi:**
+-   **status**: Required, harus `selesai` atau `ditolak`
+-   **nilai**: Optional, integer 0-100
+-   **catatan_guru**: Optional, max 1000 karakter
+
+**Response:**
+
+```json
+{
+    "berhasil": true,
+    "data": {
+        "id": 10,
+        "status": "selesai",
+        "nilai": 85,
+        "catatan_guru": "Bagus, pertahankan!",
+        "diperbarui_pada": "2025-12-01T11:00:00.000000Z"
+    },
+    "pesan": "Status penugasan berhasil diubah"
+}
+```
+
+**Catatan Penting:**
+- Nilai hanya akan ditampilkan ke siswa jika `tampilkan_nilai = true` pada tugas
+- Jika `tampilkan_nilai = false`, siswa hanya melihat status "selesai" tanpa nilai
 
 ---
 
@@ -512,12 +543,24 @@ Authorization: Bearer {token}
 -   `selesai` - Diterima oleh guru
 -   `ditolak` - Ditolak oleh guru
 
+### Mode Penilaian
+
+-   `tampilkan_nilai: true` - Siswa dapat melihat nilai mereka
+-   `tampilkan_nilai: false` - Siswa hanya melihat status selesai, nilai disembunyikan
+
+**Logic:**
+- Guru set `tampilkan_nilai` saat membuat tugas
+- Jika `true`: field `nilai` dan `catatan_guru` muncul di response siswa
+- Jika `false`: field `nilai` dan `catatan_guru` disembunyikan dari siswa
+- Guru tetap bisa input nilai, tapi tidak ditampilkan ke siswa
+
 ---
 
 ## 📝 Notes
 
 1. **Login**: User hanya bisa login menggunakan `username`
-2. **Username Requirements**:
+2. **Register**: Hanya untuk siswa, guru dibuat via seeder
+3. **Username Requirements**:
 
     - Hanya boleh huruf (a-z, A-Z), angka (0-9), dan underscore (\_)
     - Harus unique
